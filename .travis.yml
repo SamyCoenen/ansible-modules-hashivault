@@ -20,7 +20,7 @@ jobs:
       script: tox
 
     - stage: docs
-      python: "3.7"
+      python: "3.6"
       local-dir: ansible-repo/ansible/docs/docsite
       provider: pages
       skip-cleanup: true
