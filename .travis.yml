@@ -27,6 +27,8 @@ jobs:
       skip-cleanup: true
       github-token: $GITHUB_TOKEN  # Set in the settings page of your repository, as a secure variable
       keep-history: true
+      env: 
+        - MODULES=hashivault_delete
       install: 
         - mkdir ansible-repo && cd ansible-repo
         - git clone https://github.com/ansible/ansible.git && cd ansible &&  git checkout v2.7.6 && cd ..
