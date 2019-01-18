@@ -1,12 +1,33 @@
-sudo: required
-language: python
-python:
-  - "2.7"
-  - "3.6"
-services:
-  - docker
-before_install:
-  - docker pull vault:latest
-  - docker ps -a
-install: pip install tox-travis
-script: tox
+stages: 
+  - test
+  - docs
+
+jobs:
+  include:
+    - stage: test
+      sudo: required
+      language: python
+      python:
+        - "2.7"
+        - "3.6"
+      services:
+        - docker
+      before_install:
+        - docker pull vault:latest
+        - docker ps -a
+      install: pip install tox-travis
+      script: tox
+
+    - stage: docs
+      python: "3.7"
+      local-dir: ansible/docs/docsite
+      provider: pages
+      skip-cleanup: true
+      github-token: $GITHUB_TOKEN  # Set in the settings page of your repository, as a secure variable
+      keep-history: true
+      install: 
+        - git clone git@github.com:ansible/ansible.git
+        - pip install git+https://github.com/TerryHowe/ansible-modules-hashivault/
+      script: cd ansible/docs/docsite/ && make webdocs .
+      on:
+        branch: ansible-webdocs
