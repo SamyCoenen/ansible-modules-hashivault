@@ -29,7 +29,7 @@ jobs:
       keep-history: true
       install: 
         - mkdir ansible-repo && cd ansible-repo
-        - git clone https://github.com/ansible/ansible.git && git checkout v2.7.6
+        - git clone https://github.com/ansible/ansible.git && cd ansible &&  git checkout v2.7.6 && cd ..
         - pip install -r ansible/docs/docsite/requirements.txt
         - pip install -r ansible/requirements.txt
         - rm -rf ansible/lib/ansible/modules/ && mkdir -p ansible/lib/ansible/modules/hashivault
