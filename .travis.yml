@@ -33,7 +33,7 @@ jobs:
         - pip install -r ansible/docs/docsite/requirements.txt
         - pip install -r ansible/requirements.txt
         - rm -rf ansible/lib/ansible/modules/ && mkdir -p ansible/lib/ansible/modules/hashivault
-        - cp -r ../ansible/modules/ ansible/lib/ansible/modules/hashivault/
+        - cp -r ../ansible/modules/hashivault ansible/lib/ansible/modules/hashivault/
         - cd ansible/docs/docsite/ && git checkout v2.7.0
       script: make webdocs .
       on:
