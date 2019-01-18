@@ -22,7 +22,7 @@ jobs:
     - stage: test
       name: "Generating docs"
       python: "3.6"
-      local-dir: ansible-repo/ansible/docs/docsite
+      local-dir: ansible-repo/ansible/docs/docsite/_build/html
       provider: pages
       skip-cleanup: true
       github-token: $GITHUB_TOKEN  # Set in the settings page of your repository, as a secure variable
