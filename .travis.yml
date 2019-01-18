@@ -29,6 +29,7 @@ jobs:
       install: 
         - mkdir ansible-repo && cd ansible-repo
         - git clone https://github.com/ansible/ansible.git 
+        - pip install -r ansible/docs/docsite/requirements.txt
         - pip install git+https://github.com/TerryHowe/ansible-modules-hashivault/
       script: cd ansible/docs/docsite/ && make webdocs .
       on:
