@@ -31,7 +31,6 @@ jobs:
         on: 
         tags: true
       env: 
-        - MODULES=hashivault_delete
         - PLUGINS=''
       install: 
         - mkdir ansible-repo && cd ansible-repo
@@ -43,7 +42,7 @@ jobs:
         - ls ansible/lib/ansible/modules/hashivault
         - cd ansible/docs/docsite/ 
       script: 
-      - export MODULES=$(ls -m ../../lib/ansible/modules/hashivault/hashivault*)
+      - export MODULES=$(ls -m --hide='_*' ../../lib/ansible/modules/hashivault/)
       - make webdocs .
       - touch _build/html/.nojekyll
       on:
