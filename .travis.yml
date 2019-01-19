@@ -43,6 +43,7 @@ jobs:
         - ls ansible/lib/ansible/modules/hashivault
         - cd ansible/docs/docsite/ 
       script: 
+      - export MODULES=$(ls -m ../../lib/ansible/modules/hashivault/hashivault*)
       - make webdocs .
       - touch _build/html/.nojekyll
       on:
