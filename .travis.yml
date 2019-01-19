@@ -40,4 +40,4 @@ jobs:
         - cd ansible/docs/docsite/ 
       script: make webdocs .
       on:
-        branch: ansible-webdocs
+        branch: master
