@@ -42,7 +42,7 @@ jobs:
         - ls ansible/lib/ansible/modules/hashivault
         - cd ansible/docs/docsite/ 
       script: 
-      - export MODULES=$(ls -m --hide='_*' ../../lib/ansible/modules/hashivault/ | tr -d '[:space:]')
+      - export MODULES=$(ls -m --hide='_*' ../../lib/ansible/modules/hashivault/ | tr -d '[:space:]'  | sed 's/.py//g')
       - make webdocs .
       - touch _build/html/.nojekyll
       on:
