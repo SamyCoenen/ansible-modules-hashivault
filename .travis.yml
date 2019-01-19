@@ -44,6 +44,6 @@ jobs:
         - cd ansible/docs/docsite/ 
       script: 
       - make webdocs .
-      - touch _build/.nojekyll
+      - touch _build/html/.nojekyll
       on:
         tags: true
