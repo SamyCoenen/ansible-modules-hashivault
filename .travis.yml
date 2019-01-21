@@ -1,4 +1,4 @@
-stages: 
+stages:
   - test
 
 language: python
@@ -6,10 +6,21 @@ language: python
 jobs:
   include:
     - stage: test
-      name: "Tests"
+      name: "Tests Python 2.7"
       sudo: required
       python:
         - "2.7"
+      services:
+        - docker
+      before_install:
+        - docker pull vault:latest
+        - docker ps -a
+      install: pip install tox-travis
+      script: tox
+    - stage: test
+      name: "Tests Python 3.6"
+      sudo: required
+      python:
         - "3.6"
       services:
         - docker
@@ -18,7 +29,6 @@ jobs:
         - docker ps -a
       install: pip install tox-travis
       script: tox
-
     - stage: test
       name: "Generating docs"
       python: "3.6"
