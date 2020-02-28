@@ -1,4 +1,14 @@
 #!/usr/bin/env python
+import warnings
+
+from hvac.exceptions import InvalidPath
+
+from ansible.module_utils.hashivault import hashivault_argspec
+from ansible.module_utils.hashivault import hashivault_auth_client
+from ansible.module_utils.hashivault import hashivault_init
+from ansible.module_utils.hashivault import hashiwrapper
+
+ANSIBLE_METADATA = {'status': ['stableinterface'], 'supported_by': 'community', 'version': '1.1'}
 DOCUMENTATION = '''
 ---
 module: hashivault_delete
@@ -17,7 +27,8 @@ options:
         default: to environment variable VAULT_CACERT
     ca_path:
         description:
-            - "path to a directory of PEM-encoded CA cert files to verify the Vault server TLS certificate : if ca_cert is specified, its value will take precedence"
+            - "path to a directory of PEM-encoded CA cert files to verify the Vault server TLS certificate : if ca_cert
+             is specified, its value will take precedence"
         default: to environment variable VAULT_CAPATH
     client_cert:
         description:
@@ -29,7 +40,8 @@ options:
         default: to environment variable VAULT_CLIENT_KEY
     verify:
         description:
-            - "if set, do not verify presented TLS certificate before communicating with Vault server : setting this variable is not recommended except during testing"
+            - "if set, do not verify presented TLS certificate before communicating with Vault server : setting this
+             variable is not recommended except during testing"
         default: to environment variable VAULT_SKIP_VERIFY
     authtype:
         description:
@@ -47,6 +59,14 @@ options:
         description:
             - password to login to vault.
         default: to environment variable VAULT_PASSWORD
+    version:
+        description:
+            - version of the kv engine (int)
+        default: 1
+    mount_point:
+        description:
+            - secret mount point
+        default: secret
     secret:
         description:
             - secret to delete.
@@ -62,6 +82,8 @@ EXAMPLES = '''
 
 def main():
     argspec = hashivault_argspec()
+    argspec['version'] = dict(required=False, type='int', default=1)
+    argspec['mount_point'] = dict(required=False, type='str', default='secret')
     argspec['secret'] = dict(required=True, type='str')
     module = hashivault_init(argspec)
     result = hashivault_delete(module.params)
@@ -71,24 +93,40 @@ def main():
         module.exit_json(**result)
 
 
-from ansible.module_utils.hashivault import *
-
-
 @hashiwrapper
 def hashivault_delete(params):
-    result = { "changed": False, "rc" : 0}
+    result = {"changed": False, "rc": 0}
     client = hashivault_auth_client(params)
+    version = params.get('version')
+    mount_point = params.get('mount_point')
     secret = params.get('secret')
     if secret.startswith('/'):
         secret = secret.lstrip('/')
+        mount_point = ''
+    if mount_point:
+        secret_path = '%s/%s' % (mount_point, secret)
     else:
-        secret = (u'secret/%s' % secret)
+        secret_path = secret
+
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        returned_data = client.delete(secret)
+        returned_data = None
+        try:
+            if version == 2:
+                returned_data = client.secrets.kv.v2.delete_latest_version_of_secret(secret, mount_point=mount_point)
+            else:
+                returned_data = client.delete(secret_path)
+        except InvalidPath:
+            read_data = None
+        except Exception as e:
+            result['rc'] = 1
+            result['failed'] = True
+            error_string = "%s(%s)" % (e.__class__.__name__, e)
+            result['msg'] = u"Error %s deleting %s" % (error_string, secret_path)
+            return result
         if returned_data:
-            result['data'] = returned_data
-        result['msg'] = u"Secret %s deleted" % secret
+            result['data'] = returned_data.text
+        result['msg'] = u"Secret %s deleted" % secret_path
     result['changed'] = True
     return result
 

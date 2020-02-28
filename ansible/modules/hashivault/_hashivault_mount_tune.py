@@ -1,11 +1,17 @@
 #!/usr/bin/env python
+from ansible.module_utils.hashivault import hashivault_argspec
+from ansible.module_utils.hashivault import hashivault_auth_client
+from ansible.module_utils.hashivault import hashivault_init
+from ansible.module_utils.hashivault import hashiwrapper
+
+ANSIBLE_METADATA = {'status': ['deprecated'], 'supported_by': 'community', 'version': '1.1'}
 DOCUMENTATION = '''
 ---
 module: hashivault_mount_tune
 version_added: "3.7.0"
 short_description: Hashicorp Vault tune backend
 description:
-    - Module to enable tuning of backends in HashiCorp Vault.
+    - Module to enable tuning of backends in HashiCorp Vault. use hashivault_secret_engine instead
 options:
     url:
         description:
@@ -17,7 +23,8 @@ options:
         default: to environment variable VAULT_CACERT
     ca_path:
         description:
-            - "path to a directory of PEM-encoded CA cert files to verify the Vault server TLS certificate : if ca_cert is specified, its value will take precedence"
+            - "path to a directory of PEM-encoded CA cert files to verify the Vault server TLS certificate : if ca_cert
+             is specified, its value will take precedence"
         default: to environment variable VAULT_CAPATH
     client_cert:
         description:
@@ -29,7 +36,8 @@ options:
         default: to environment variable VAULT_CLIENT_KEY
     verify:
         description:
-            - "if set, do not verify presented TLS certificate before communicating with Vault server : setting this variable is not recommended except during testing"
+            - "if set, do not verify presented TLS certificate before communicating with Vault server : setting this
+             variable is not recommended except during testing"
         default: to environment variable VAULT_SKIP_VERIFY
     authtype:
         description:
@@ -80,9 +88,6 @@ def main():
         module.exit_json(**result)
 
 
-from ansible.module_utils.basic import *
-from ansible.module_utils.hashivault import *
-
 @hashiwrapper
 def hashivault_mount_tune(module):
     client = hashivault_auth_client(module.params)
@@ -100,7 +105,8 @@ def hashivault_mount_tune(module):
         changed = True
 
     if not module.check_mode:
-        client.sys.tune_mount_configuration(mount_point, default_lease_ttl=default_lease_ttl, max_lease_ttl=max_lease_ttl)
+        client.sys.tune_mount_configuration(mount_point, default_lease_ttl=default_lease_ttl,
+                                            max_lease_ttl=max_lease_ttl)
 
     return {'changed': changed}
 

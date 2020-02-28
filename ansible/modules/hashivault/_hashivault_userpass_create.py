@@ -1,11 +1,17 @@
 #!/usr/bin/env python
+from ansible.module_utils.hashivault import hashivault_argspec
+from ansible.module_utils.hashivault import hashivault_auth_client
+from ansible.module_utils.hashivault import hashivault_init
+from ansible.module_utils.hashivault import hashiwrapper
+
+ANSIBLE_METADATA = {'status': ['deprecated'], 'supported_by': 'community', 'version': '1.1'}
 DOCUMENTATION = '''
 ---
-module: hashivault_secret_enable
+module: hashivault_userpass_create
 version_added: "2.2.0"
-short_description: Hashicorp Vault secret enable module
+short_description: Hashicorp Vault userpass create module
 description:
-    - Module to enable secret backends in Hashicorp Vault.
+    - Module to create userpass users in Hashicorp Vault. Use hashicorp_userpass instead.
 options:
     url:
         description:
@@ -17,7 +23,8 @@ options:
         default: to environment variable VAULT_CACERT
     ca_path:
         description:
-            - "path to a directory of PEM-encoded CA cert files to verify the Vault server TLS certificate : if ca_cert is specified, its value will take precedence"
+            - "path to a directory of PEM-encoded CA cert files to verify the Vault server TLS certificate : if ca_cert
+             is specified, its value will take precedence"
         default: to environment variable VAULT_CAPATH
     client_cert:
         description:
@@ -29,7 +36,8 @@ options:
         default: to environment variable VAULT_CLIENT_KEY
     verify:
         description:
-            - "if set, do not verify presented TLS certificate before communicating with Vault server : setting this variable is not recommended except during testing"
+            - "if set, do not verify presented TLS certificate before communicating with Vault server : setting this
+             variable is not recommended except during testing"
         default: to environment variable VAULT_SKIP_VERIFY
     authtype:
         description:
@@ -49,63 +57,52 @@ options:
         default: to environment variable VAULT_PASSWORD
     name:
         description:
-            - name of secret backend
-    backend:
+            - user name to create.
+    pass:
         description:
-            - type of secret backend
-    description:
+            - user to create password.
+    policies:
         description:
-            - description of secret backend
-    config:
+            - user policies.
+        default: default
+    mount_point:
         description:
-            - config of secret backend
-    options:
-        description:
-            - options of secret backend
+            - default The "path" (app-id) the auth backend is mounted on.
+        default: userpass
 '''
 EXAMPLES = '''
 ---
 - hosts: localhost
   tasks:
-    - hashivault_secret_enable:
-        name: "ephemeral"
-        backend: "generic"
+    - hashivault_userpass_create:
+      name: 'bob'
+      pass: 'S3cre7s'
+      policies: 'bob'
 '''
 
 
 def main():
     argspec = hashivault_argspec()
     argspec['name'] = dict(required=True, type='str')
-    argspec['backend'] = dict(required=True, type='str')
-    argspec['description'] = dict(required=False, type='str')
-    argspec['config'] = dict(required=False, type='dict')
-    argspec['options'] = dict(required=False, type='dict')
+    argspec['pass'] = dict(required=True, type='str')
+    argspec['policies'] = dict(required=False, type='str', default='default')
+    argspec['mount_point'] = dict(required=False, type='str', default='userpass', no_log=True)
     module = hashivault_init(argspec)
-    result = hashivault_secret_enable(module.params)
+    result = hashivault_userpass_create(module.params)
     if result.get('failed'):
         module.fail_json(**result)
     else:
         module.exit_json(**result)
 
 
-from ansible.module_utils.basic import *
-from ansible.module_utils.hashivault import *
-
-
 @hashiwrapper
-def hashivault_secret_enable(params):
+def hashivault_userpass_create(params):
     client = hashivault_auth_client(params)
     name = params.get('name')
-    backend = params.get('backend')
-    description = params.get('description')
-    config = params.get('config')
-    options = params.get('options')
-    secrets = client.sys.list_mounted_secrets_engines()
-    secrets = secrets.get('data', secrets)
-    path = name + "/"
-    if path in secrets:
-        return {'changed': False}
-    client.sys.enable_secrets_engine(backend, description=description, path=name, config=config, options=options)
+    password = params.get('pass')
+    policies = params.get('policies')
+    mount_point = params.get('mount_point')
+    client.create_userpass(name, password, policies, mount_point=mount_point)
     return {'changed': True}
 
 

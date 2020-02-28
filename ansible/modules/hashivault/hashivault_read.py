@@ -1,4 +1,10 @@
 #!/usr/bin/env python
+
+from ansible.module_utils.hashivault import hashivault_argspec
+from ansible.module_utils.hashivault import hashivault_init
+from ansible.module_utils.hashivault import hashivault_read
+
+ANSIBLE_METADATA = {'status': ['stableinterface'], 'supported_by': 'community', 'version': '1.1'}
 DOCUMENTATION = '''
 ---
 module: hashivault_read
@@ -17,7 +23,8 @@ options:
         default: to environment variable VAULT_CACERT
     ca_path:
         description:
-            - "path to a directory of PEM-encoded CA cert files to verify the Vault server TLS certificate : if ca_cert is specified, its value will take precedence"
+            - "path to a directory of PEM-encoded CA cert files to verify the Vault server TLS certificate : if ca_cert
+             is specified, its value will take precedence"
         default: to environment variable VAULT_CAPATH
     client_cert:
         description:
@@ -29,7 +36,8 @@ options:
         default: to environment variable VAULT_CLIENT_KEY
     verify:
         description:
-            - "if set, do not verify presented TLS certificate before communicating with Vault server : setting this variable is not recommended except during testing"
+            - "if set, do not verify presented TLS certificate before communicating with Vault server : setting this
+             variable is not recommended except during testing"
         default: to environment variable VAULT_SKIP_VERIFY
     authtype:
         description:
@@ -47,6 +55,14 @@ options:
         description:
             - password to login to vault.
         default: to environment variable VAULT_PASSWORD
+    version:
+        description:
+            - version of the kv engine (int)
+        default: 1
+    mount_point:
+        description:
+            - secret mount point
+        default: secret
     secret:
         description:
             - secret to read.
@@ -71,6 +87,8 @@ EXAMPLES = '''
 
 def main():
     argspec = hashivault_argspec()
+    argspec['version'] = dict(required=False, type='int', default=1)
+    argspec['mount_point'] = dict(required=False, type='str', default='secret')
     argspec['secret'] = dict(required=True, type='str')
     argspec['key'] = dict(required=False, type='str')
     argspec['register'] = dict(required=False, type='str')
@@ -81,49 +99,6 @@ def main():
         module.fail_json(**result)
     else:
         module.exit_json(**result)
-
-
-from ansible.module_utils.basic import *
-from ansible.module_utils.hashivault import *
-
-
-@hashiwrapper
-def hashivault_read(params):
-    result = { "changed": False, "rc" : 0}
-    client = hashivault_auth_client(params)
-    secret = params.get('secret')
-    key = params.get('key')
-    default = params.get('default')
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        if secret.startswith('/'):
-            secret = secret.lstrip('/')
-            response = client.read(secret)
-        else:
-            response = client.read(u'secret/%s' % secret)
-        if not response:
-            if default is not None:
-                result['value'] = default
-                return result
-            result['rc'] = 1
-            result['failed'] = True
-            result['msg'] = u"Secret %s is not in vault" % secret
-            return result
-        data = response['data']
-    if key and key not in data:
-        if default is not None:
-            result['value'] = default
-            return result
-        result['rc'] = 1
-        result['failed'] = True
-        result['msg'] = u"Key %s is not in secret %s" % (key, secret)
-        return result
-    if key:
-        value = data[key]
-    else:
-        value = data
-    result['value'] = value
-    return result
 
 
 if __name__ == '__main__':

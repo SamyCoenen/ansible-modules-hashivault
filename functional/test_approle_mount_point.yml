@@ -1,0 +1,112 @@
+---
+- hosts: localhost
+  gather_facts: no
+  vars:
+    namespace: 'application'
+    rules: >
+        path "secret/{{namespace}}/*" {
+          capabilities = ["create", "read", "update", "delete", "list"]
+        }
+        path "secret/{{namespace}}" {
+          capabilities = ["list"]
+        }
+  tasks:
+    - name: enable lightning approle authentication
+      hashivault_auth_enable:
+        name: approle
+        mount_point: lightning
+
+    - name: delete role
+      hashivault_approle_role:
+        name: bigspark
+        mount_point: lightning
+        state: absent
+      failed_when: false
+
+    - name: create role on mount_point
+      hashivault_approle_role:
+        name: bigspark
+        mount_point: lightning
+        policies:
+          - approle_test_policy
+      register: 'vault_role_create'
+    - assert: { that: "{{vault_role_create.changed}} == True" }
+    - assert: { that: "{{vault_role_create.rc}} == 0" }
+
+    - name: list roles
+      hashivault_approle_role_list:
+        mount_point: lightning
+      register: 'vault_role_list'
+    - assert: { that: "{{vault_role_list.changed}} == False" }
+    - assert: { that: "{{vault_role_list.rc}} == 0" }
+    - fail: msg="role bigspark not in list"
+      when: '"bigspark" not in vault_role_list.roles'
+
+    - name: get role
+      hashivault_approle_role_get:
+        name: bigspark
+        mount_point: lightning
+      register: 'vault_role'
+    - assert: { that: "{{vault_role.changed}} == False" }
+    - assert: { that: "{{vault_role.rc}} == 0" }
+
+    - name: get role id
+      hashivault_approle_role_id:
+        name: bigspark
+        mount_point: lightning
+      register: 'vault_role_id'
+    - assert: { that: "{{vault_role_id.changed}} == False" }
+    - assert: { that: "{{vault_role_id.rc}} == 0" }
+    - assert:
+        that:
+          - vault_role_id.id|default('') != ''
+    - set_fact:
+        role_id: "{{vault_role_id.id}}"
+
+    - name: create role secret id
+      hashivault_approle_role_secret:
+        name: bigspark
+        mount_point: lightning
+        state: present
+      register: 'vault_role_secret_create'
+    - assert: { that: "{{vault_role_secret_create.changed}} == True" }
+    - assert: { that: "{{vault_role_secret_create.rc}} == 0" }
+    - assert:
+        that:
+          - vault_role_secret_create.data.secret_id_accessor|default('') != ''
+          - vault_role_secret_create.data.secret_id|default('') != ''
+    - set_fact:
+        approle_secret_id: "{{vault_role_secret_create.data.secret_id}}"
+    - set_fact:
+        approle_secret_id_accessor: "{{vault_role_secret_create.data.secret_id_accessor}}"
+
+    - name: list secrets
+      hashivault_approle_role_secret_list:
+        name: bigspark
+        mount_point: lightning
+      register: 'vault_role_secret_list'
+    - assert: { that: "{{vault_role_secret_list.changed}} == False" }
+    - assert: { that: "{{vault_role_secret_list.rc}} == 0" }
+    - fail: msg="secret {{approle_secret_id_accessor}} not in list"
+      when: approle_secret_id_accessor not in vault_role_secret_list.secrets
+
+    - name: get secret
+      hashivault_approle_role_secret_get:
+        name: bigspark
+        mount_point: lightning
+        secret: "{{approle_secret_id}}"
+      register: 'vault_role_secret_get'
+    - assert: { that: "{{vault_role_secret_get.changed}} == False" }
+    - assert: { that: "{{vault_role_secret_get.rc}} == 0" }
+    - assert: { that: "'{{vault_role_secret_get.secret.secret_id_accessor}}' == '{{approle_secret_id_accessor}}'" }
+
+# unsupported by docker image
+    - name: get secret accessor
+      hashivault_approle_role_secret_accessor_get:
+        name: bigspark
+        mount_point: lightning
+        accessor: "{{approle_secret_id_accessor}}"
+      register: 'vault_role_secret_accessor_get'
+    - assert: { that: "{{vault_role_secret_accessor_get.changed}} == False" }
+    - assert: { that: "{{vault_role_secret_accessor_get.rc}} == 0" }
+    - assert: { that: "'{{vault_role_secret_accessor_get.secret.secret_id_accessor}}' != ''" }

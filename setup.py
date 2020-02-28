@@ -11,20 +11,22 @@ files = [
     "ansible/modules/hashivault",
 ]
 
-long_description=open('README.rst', 'r').read()
+long_description = open('README.rst', 'r').read()
 
 setup(
     name='ansible-modules-hashivault',
-    version='3.12.0',
+    version='4.2.3',
     description='Ansible Modules for Hashicorp Vault',
     long_description=long_description,
+    long_description_content_type='text/x-rst',
     author='Terry Howe',
     author_email='terrylhowe@example.com',
     url='https://github.com/TerryHowe/ansible-modules-hashivault',
     py_modules=py_files,
     packages=files,
-    install_requires = [
+    install_requires=[
         'ansible>=2.0.0',
-        'hvac>=0.7.0',
+        'hvac>=0.9.2',
+        'requests',
     ],
 )

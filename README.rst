@@ -13,14 +13,29 @@ Ansible modules for Hashicorp Vault.
    :alt: License: MIT
    :target: https://opensource.org/licenses/MIT
 
-Install this Ansible module with::
+Install this Ansible module:
 
-    pip install ansible-modules-hashivault
+* via ``pip``:
+
+::
+
+  pip install ansible-modules-hashivault
+
+* via ``ansible-galaxy`` (requires ``hvac>=0.7.0``):
+
+::
+
+  ansible-galaxy install 'git+https://github.com/TerryHowe/ansible-modules-hashivault.git'
+
+..
+
+  Note: The ``hashicorp`` lookup plugin does not work with this last install method (`ansible/ansible#28770 <https://github.com/ansible/ansible/issues/28770>`_).
+  You can fallback to the build-in lookup plugin: `hashi_vault <https://docs.ansible.com/ansible/latest/plugins/lookup/hashi_vault.html>`_
 
 In most cases the Hashicorp Vault modules should be run on localhost.
 
 Environmental Variables
--------------------
+-----------------------
 
 The following variables need to be exported to the environment where you run ansible
 in order to authenticate to your HashiCorp Vault instance:
@@ -38,6 +53,11 @@ in order to authenticate to your HashiCorp Vault instance:
   * `VAULT_CACERT`: path to a PEM-encoded CA cert file to use to verify the Vault server TLS certificate
   * `VAULT_CAPATH`: path to a directory of PEM-encoded CA cert files to verify the Vault server TLS certificate
   * `VAULT_NAMESPACE`: specify the Vault Namespace, if you have one
+
+Generated Documentation
+-----------------------
+
+https://terryhowe.github.io/ansible-modules-hashivault/modules/list_of_hashivault_modules.html
 
 
 Reading and Writing
@@ -209,24 +229,10 @@ Handle auth backends::
     ---
     - hosts: localhost
       tasks:
-        - hashivault_auth_list:
-          register: 'vault_auth_list'
-        - block:
-          - hashivault_auth_enable:
-              name: "userpass"
-            register: 'vault_auth_enable'
-          when: "'userpass/' not in vault_auth_list.backends"
+        - hashivault_auth_method:
+            method_type: "userpass"
+            state: "enabled"
 
-Tune auth backends::
-
-    ---
-    - hosts: localhost
-      tasks:
-        - name: Tune ephermal secret store
-          hashivault_mount_tune:
-            mount_point: ephemeral
-            default_lease_ttl: 3600
-            max_lease_ttl: 8600
 
 Audit Backends
 --------------
@@ -267,14 +273,16 @@ Secret Backends
 Enable and disable various secret backends::
 
     ---
-    - hashivault_secret_list:
-      register: 'hashivault_secret_list'
-    - hashivault_secret_enable:
-        name: "ephemeral"
-        backend: "generic"
-    - hashivault_secret_disable:
-        name: "ephemeral"
-        backend: "generic"
+    - hashivault_secret_engine:
+        name: secret
+        backend: kv
+        options:
+          version: 2
+        config:
+          default_lease_ttl: 1500
+    - hashivault_secret_engine:
+        name: secret
+        state: absent
 
 Token Manipulation
 ------------------

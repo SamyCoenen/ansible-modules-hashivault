@@ -1,4 +1,10 @@
 #!/usr/bin/env python
+from ansible.module_utils.hashivault import hashivault_argspec
+from ansible.module_utils.hashivault import hashivault_auth_client
+from ansible.module_utils.hashivault import hashivault_init
+from ansible.module_utils.hashivault import hashiwrapper
+
+ANSIBLE_METADATA = {'status': ['stableinterface'], 'supported_by': 'community', 'version': '1.1'}
 DOCUMENTATION = '''
 ---
 module: hashivault_approle_role_id
@@ -17,7 +23,8 @@ options:
         default: to environment variable VAULT_CACERT
     ca_path:
         description:
-            - "path to a directory of PEM-encoded CA cert files to verify the Vault server TLS certificate : if ca_cert is specified, its value will take precedence"
+            - "path to a directory of PEM-encoded CA cert files to verify the Vault server TLS certificate : if ca_cert
+             is specified, its value will take precedence"
         default: to environment variable VAULT_CAPATH
     client_cert:
         description:
@@ -29,7 +36,8 @@ options:
         default: to environment variable VAULT_CLIENT_KEY
     verify:
         description:
-            - "if set, do not verify presented TLS certificate before communicating with Vault server : setting this variable is not recommended except during testing"
+            - "if set, do not verify presented TLS certificate before communicating with Vault server : setting this
+             variable is not recommended except during testing"
         default: to environment variable VAULT_SKIP_VERIFY
     authtype:
         description:
@@ -50,6 +58,10 @@ options:
     name:
         description:
             - role name.
+    mount_point:
+        description:
+            - mount point for role
+        default: approle
 '''
 EXAMPLES = '''
 ---
@@ -65,6 +77,7 @@ EXAMPLES = '''
 def main():
     argspec = hashivault_argspec()
     argspec['name'] = dict(required=True, type='str')
+    argspec['mount_point'] = dict(required=False, type='str', default='approle')
     module = hashivault_init(argspec)
     result = hashivault_approle_role_id(module.params)
     if result.get('failed'):
@@ -73,15 +86,11 @@ def main():
         module.exit_json(**result)
 
 
-from ansible.module_utils.basic import *
-from ansible.module_utils.hashivault import *
-
-
 @hashiwrapper
 def hashivault_approle_role_id(params):
     name = params.get('name')
     client = hashivault_auth_client(params)
-    return {'id': client.get_role_id(name)}
+    return {'id': client.get_role_id(name, mount_point=params.get('mount_point'))}
 
 
 if __name__ == '__main__':

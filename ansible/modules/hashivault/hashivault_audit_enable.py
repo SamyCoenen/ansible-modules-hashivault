@@ -1,4 +1,10 @@
 #!/usr/bin/env python
+from ansible.module_utils.hashivault import hashivault_argspec
+from ansible.module_utils.hashivault import hashivault_auth_client
+from ansible.module_utils.hashivault import hashivault_init
+from ansible.module_utils.hashivault import hashiwrapper
+
+ANSIBLE_METADATA = {'status': ['stableinterface'], 'supported_by': 'community', 'version': '1.1'}
 DOCUMENTATION = '''
 ---
 module: hashivault_audit_enable
@@ -17,7 +23,8 @@ options:
         default: to environment variable VAULT_CACERT
     ca_path:
         description:
-            - "path to a directory of PEM-encoded CA cert files to verify the Vault server TLS certificate : if ca_cert is specified, its value will take precedence"
+            - "path to a directory of PEM-encoded CA cert files to verify the Vault server TLS certificate : if ca_cert
+             is specified, its value will take precedence"
         default: to environment variable VAULT_CAPATH
     client_cert:
         description:
@@ -29,7 +36,8 @@ options:
         default: to environment variable VAULT_CLIENT_KEY
     verify:
         description:
-            - "if set, do not verify presented TLS certificate before communicating with Vault server : setting this variable is not recommended except during testing"
+            - "if set, do not verify presented TLS certificate before communicating with Vault server : setting this
+             variable is not recommended except during testing"
         default: to environment variable VAULT_SKIP_VERIFY
     authtype:
         description:
@@ -79,10 +87,6 @@ def main():
         module.exit_json(**result)
 
 
-from ansible.module_utils.basic import *
-from ansible.module_utils.hashivault import *
-
-
 @hashiwrapper
 def hashivault_audit_enable(params):
     client = hashivault_auth_client(params)
@@ -95,7 +99,7 @@ def hashivault_audit_enable(params):
     if path in backends and backends[path]["options"] == options:
         return {'changed': False}
     client.sys.enable_audit_device(name, description=description, options=options)
-    return {'changed': True }
+    return {'changed': True}
 
 
 if __name__ == '__main__':

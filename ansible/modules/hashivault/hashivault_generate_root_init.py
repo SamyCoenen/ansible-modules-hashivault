@@ -1,11 +1,17 @@
 #!/usr/bin/env python
+from ansible.module_utils.hashivault import hashivault_argspec
+from ansible.module_utils.hashivault import hashivault_client
+from ansible.module_utils.hashivault import hashivault_init
+from ansible.module_utils.hashivault import hashiwrapper
+
+ANSIBLE_METADATA = {'status': ['stableinterface'], 'supported_by': 'community', 'version': '1.1'}
 DOCUMENTATION = '''
 ---
-module: hashivault_auth_enable
-version_added: "2.2.0"
-short_description: Hashicorp Vault auth enable module
+module: hashivault_generate_root_init
+version_added: "3.14.0"
+short_description: Hashicorp Vault generate root token init module
 description:
-    - Module to enable authentication backends in Hashicorp Vault.
+    - Module to start root token generation of Hashicorp Vault.
 options:
     url:
         description:
@@ -17,7 +23,8 @@ options:
         default: to environment variable VAULT_CACERT
     ca_path:
         description:
-            - "path to a directory of PEM-encoded CA cert files to verify the Vault server TLS certificate : if ca_cert is specified, its value will take precedence"
+            - "path to a directory of PEM-encoded CA cert files to verify the Vault server TLS certificate : if ca_cert
+             is specified, its value will take precedence"
         default: to environment variable VAULT_CAPATH
     client_cert:
         description:
@@ -29,7 +36,8 @@ options:
         default: to environment variable VAULT_CLIENT_KEY
     verify:
         description:
-            - "if set, do not verify presented TLS certificate before communicating with Vault server : setting this variable is not recommended except during testing"
+            - "if set, do not verify presented TLS certificate before communicating with Vault server : setting this
+             variable is not recommended except during testing"
         default: to environment variable VAULT_SKIP_VERIFY
     authtype:
         description:
@@ -47,54 +55,48 @@ options:
         description:
             - password to login to vault.
         default: to environment variable VAULT_PASSWORD
-    name:
+    secret_shares:
         description:
-            - name of authenticator
-    description:
+            - specifies the number of shares to split the master key into.
+        default: 5
+    secret_threshold:
         description:
-            - description of authenticator
-    mount_point:
+            - specifies the number of shares required to reconstruct the master key.
+        default: 3
+    pgp_key:
         description:
-            - location where this auth backend will be mounted 
+            - specifies PGP public keys used to encrypt the output root token.
+        default: ''
 '''
 EXAMPLES = '''
 ---
 - hosts: localhost
   tasks:
-    - hashivault_auth_enable:
-        name: "userpass"
+    - hashivault_generate_root_init:
+        pgp_key: key
 '''
 
 
 def main():
     argspec = hashivault_argspec()
-    argspec['name'] = dict(required=True, type='str')
-    argspec['description'] = dict(required=False, type='str')
-    argspec['mount_point'] = dict(required=False, type='str', default=None)
+    argspec['pgp_key'] = dict(required=False, type='str', default='')
     module = hashivault_init(argspec)
-    result = hashivault_auth_enable(module.params)
+    result = hashivault_generate_root_init(module.params)
     if result.get('failed'):
         module.fail_json(**result)
     else:
         module.exit_json(**result)
 
 
-from ansible.module_utils.basic import *
-from ansible.module_utils.hashivault import *
-
-
 @hashiwrapper
-def hashivault_auth_enable(params):
-    client = hashivault_auth_client(params)
-    name = params.get('name')
-    description = params.get('description')
-    mount_point = params.get('mount_point')
-    backends = client.sys.list_auth_methods()
-    path = (mount_point or name) + u"/"
-    if path in backends:
+def hashivault_generate_root_init(params):
+    client = hashivault_client(params)
+    # Check if rekey is on-going
+    status = client.generate_root_status
+    if status['started']:
         return {'changed': False}
-    client.sys.enable_auth_method(name, description=description, path=mount_point)
-    return {'changed': True}
+    pgp = params.get('pgp_key')
+    return {'status': client.start_generate_root(pgp, otp=False), 'changed': True}
 
 
 if __name__ == '__main__':

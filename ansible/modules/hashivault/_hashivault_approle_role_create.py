@@ -1,11 +1,17 @@
 #!/usr/bin/env python
+from ansible.module_utils.hashivault import hashivault_argspec
+from ansible.module_utils.hashivault import hashivault_auth_client
+from ansible.module_utils.hashivault import hashivault_init
+from ansible.module_utils.hashivault import hashiwrapper
+
+ANSIBLE_METADATA = {'status': ['deprecated'], 'supported_by': 'community', 'version': '1.1'}
 DOCUMENTATION = '''
 ---
 module: hashivault_approle_role_create
 version_added: "3.8.0"
 short_description: Hashicorp Vault approle create role module
 description:
-    - Module to create an approle role from Hashicorp Vault.
+    - Module to create an approle role from Hashicorp Vault. Use hashivault_approle_role instead.
 options:
     url:
         description:
@@ -17,7 +23,8 @@ options:
         default: to environment variable VAULT_CACERT
     ca_path:
         description:
-            - "path to a directory of PEM-encoded CA cert files to verify the Vault server TLS certificate : if ca_cert is specified, its value will take precedence"
+            - "path to a directory of PEM-encoded CA cert files to verify the Vault server TLS certificate : if ca_cert
+             is specified, its value will take precedence"
         default: to environment variable VAULT_CAPATH
     client_cert:
         description:
@@ -29,7 +36,8 @@ options:
         default: to environment variable VAULT_CLIENT_KEY
     verify:
         description:
-            - "if set, do not verify presented TLS certificate before communicating with Vault server : setting this variable is not recommended except during testing"
+            - "if set, do not verify presented TLS certificate before communicating with Vault server : setting this
+             variable is not recommended except during testing"
         default: to environment variable VAULT_SKIP_VERIFY
     authtype:
         description:
@@ -50,6 +58,10 @@ options:
     name:
         description:
             - role name.
+    mount_point:
+        description:
+            - mount point for role
+        default: approle
     bind_secret_id:
         description:
             - Require secret_id to be presented when logging in using this AppRole.
@@ -93,7 +105,8 @@ EXAMPLES = '''
 def main():
     argspec = hashivault_argspec()
     argspec['name'] = dict(required=True, type='str')
-    argspec['bind_secret_id'] = dict(required=False, type='bool')
+    argspec['mount_point'] = dict(required=False, type='str', default='approle')
+    argspec['bind_secret_id'] = dict(required=False, type='bool', no_log=True)
     argspec['bound_cidr_list'] = dict(required=False, type='list')
     argspec['policies'] = dict(required=True, type='list')
     argspec['secret_id_num_uses'] = dict(required=False, type='str')
@@ -111,13 +124,10 @@ def main():
         module.exit_json(**result)
 
 
-from ansible.module_utils.basic import *
-from ansible.module_utils.hashivault import *
-
-
 @hashiwrapper
 def hashivault_approle_role_create(params):
-    ARGS = [
+    args = [
+        'mount_point',
         'bind_secret_id',
         'bound_cidr_list',
         'secret_id_num_uses',
@@ -134,7 +144,7 @@ def hashivault_approle_role_create(params):
     kwargs = {
         'policies': policies,
     }
-    for arg in ARGS:
+    for arg in args:
         value = params.get(arg)
         if value is not None:
             kwargs[arg] = value

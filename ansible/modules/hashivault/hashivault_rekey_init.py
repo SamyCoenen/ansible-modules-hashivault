@@ -1,4 +1,10 @@
 #!/usr/bin/env python
+from ansible.module_utils.hashivault import hashivault_argspec
+from ansible.module_utils.hashivault import hashivault_client
+from ansible.module_utils.hashivault import hashivault_init
+from ansible.module_utils.hashivault import hashiwrapper
+
+ANSIBLE_METADATA = {'status': ['stableinterface'], 'supported_by': 'community', 'version': '1.1'}
 DOCUMENTATION = '''
 ---
 module: hashivault_rekey_init
@@ -17,7 +23,8 @@ options:
         default: to environment variable VAULT_CACERT
     ca_path:
         description:
-            - "path to a directory of PEM-encoded CA cert files to verify the Vault server TLS certificate : if ca_cert is specified, its value will take precedence"
+            - "path to a directory of PEM-encoded CA cert files to verify the Vault server TLS certificate : if ca_cert
+             is specified, its value will take precedence"
         default: to environment variable VAULT_CAPATH
     client_cert:
         description:
@@ -29,7 +36,8 @@ options:
         default: to environment variable VAULT_CLIENT_KEY
     verify:
         description:
-            - "if set, do not verify presented TLS certificate before communicating with Vault server : setting this variable is not recommended except during testing"
+            - "if set, do not verify presented TLS certificate before communicating with Vault server : setting this
+             variable is not recommended except during testing"
         default: to environment variable VAULT_SKIP_VERIFY
     authtype:
         description:
@@ -74,7 +82,7 @@ def main():
     argspec = hashivault_argspec()
     argspec['secret_shares'] = dict(required=False, type='int', default=5)
     argspec['secret_threshold'] = dict(required=False, type='int', default=3)
-    argspec['pgp_keys'] = dict(required=False, type='list', default=[])
+    argspec['pgp_keys'] = dict(required=False, type='list', default=[], no_log=True)
     argspec['backup'] = dict(required=False, type='bool', default=False)
     module = hashivault_init(argspec)
     result = hashivault_rekey_init(module.params)
@@ -84,22 +92,19 @@ def main():
         module.exit_json(**result)
 
 
-from ansible.module_utils.basic import *
-from ansible.module_utils.hashivault import *
-
-
 @hashiwrapper
 def hashivault_rekey_init(params):
     client = hashivault_client(params)
     # Check if rekey is on-going, exit if there is a rekey in progress
     status = client.rekey_status
-    if status['started']: 
+    if status['started']:
         return {'changed': False}
     secret_shares = params.get('secret_shares')
     secret_threshold = params.get('secret_threshold')
     pgp_keys = params.get('pgp_keys')
     backup = params.get('backup')
     return {'status': client.sys.start_rekey(secret_shares, secret_threshold, pgp_keys, backup), 'changed': True}
+
 
 if __name__ == '__main__':
     main()

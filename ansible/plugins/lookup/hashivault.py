@@ -12,21 +12,21 @@
 # The plugin can be run manually for testing:
 #     python ansible/plugins/lookup/hashivault.py ldapadmin password
 #
-import json
 import os
-import requests
 import sys
-import warnings
 
 from ansible.errors import AnsibleError
 from ansible.plugins.lookup import LookupBase
-from ansible.modules.hashivault import hashivault_read
-from ansible.module_utils.hashivault import hashivault_default_token
+
+from ansible.module_utils.hashivault import (
+    hashivault_default_token,
+    hashivault_read,
+)
 
 
 class LookupModule(LookupBase):
-
-    def _get_environment(self, environments, name, default_value=None):
+    @staticmethod
+    def _get_environment(environments, name, default_value=None):
         for env in environments:
             if name in env:
                 return env.get(name)
@@ -45,12 +45,16 @@ class LookupModule(LookupBase):
         except IndexError:
             key = None
         default = kwargs.get('default', None)
+        version = kwargs.get('version')
+        mount_point = kwargs.get('mount_point', 'secret')
         params = {
             'url': self._get_url(environments),
             'verify': self._get_verify(environments),
             'secret': path,
             'key': key,
             'default': default,
+            'version': version,
+            'mount_point': mount_point,
         }
         authtype = self._get_environment(environments, 'VAULT_AUTHTYPE', 'token')
         params['authtype'] = authtype
@@ -70,7 +74,6 @@ class LookupModule(LookupBase):
             params['password'] = self._get_environment(environments, 'VAULT_PASSWORD')
         else:
             params['token'] = self._get_environment(environments, 'VAULT_TOKEN', hashivault_default_token())
-
         return params
 
     def _get_verify(self, environments):
@@ -84,16 +87,17 @@ class LookupModule(LookupBase):
             return False
         return True
 
-    def run(self, terms, variables, **kwargs):
+    def run(self, terms, variables=None, **kwargs):
         environments = variables.get('environment', [])
-        result = hashivault_read.hashivault_read(self._get_params(terms, environments, kwargs))
+        result = hashivault_read(self._get_params(terms, environments, kwargs))
         if 'value' not in result:
             path = terms[0]
             try:
                 key = '/' + terms[1]
             except IndexError:
                 key = ''
-            raise AnsibleError('Error reading vault %s%s: %s\n%s' % (path, key, result.get('msg', 'msg not set'), result.get('stack_trace', '')))
+            raise AnsibleError('Error reading vault %s%s: %s\n%s' % (path, key, result.get('msg', 'msg not set'),
+                                                                     result.get('stack_trace', '')))
         return [result['value']]
 
 
@@ -101,8 +105,9 @@ def main(argv=sys.argv[1:]):
     if len(argv) < 1:
         print("Usage: hashivault.py path [key]")
         return -1
-    print(LookupModule().run(argv, None)[0])
+    print(LookupModule().run(argv, {})[0])
     return 0
+
 
 if __name__ == "__main__":
     sys.exit(main(sys.argv[1:]))

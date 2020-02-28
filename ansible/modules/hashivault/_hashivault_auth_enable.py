@@ -1,11 +1,19 @@
 #!/usr/bin/env python
+from ansible.module_utils.hashivault import hashivault_argspec
+from ansible.module_utils.hashivault import hashivault_auth_client
+from ansible.module_utils.hashivault import hashivault_init
+from ansible.module_utils.hashivault import hashiwrapper
+
+ANSIBLE_METADATA = {'status': ['deprecated'], 'alternative': 'Use M(hashivault_auth_method) instead.',
+                    'why': 'This module does not fit the standard pattern',
+                    'supported_by': 'community', 'version': '1.1'}
 DOCUMENTATION = '''
 ---
-module: hashivault_userpass_delete
+module: hashivault_auth_enable
 version_added: "2.2.0"
-short_description: Hashicorp Vault userpass delete module
+short_description: Hashicorp Vault auth enable module
 description:
-    - Module to delete userpass users in Hashicorp Vault.
+    - Use hashivault_auth_method instead.
 options:
     url:
         description:
@@ -17,7 +25,8 @@ options:
         default: to environment variable VAULT_CACERT
     ca_path:
         description:
-            - "path to a directory of PEM-encoded CA cert files to verify the Vault server TLS certificate : if ca_cert is specified, its value will take precedence"
+            - "path to a directory of PEM-encoded CA cert files to verify the Vault server TLS certificate : if ca_cert
+             is specified, its value will take precedence"
         default: to environment variable VAULT_CAPATH
     client_cert:
         description:
@@ -29,7 +38,8 @@ options:
         default: to environment variable VAULT_CLIENT_KEY
     verify:
         description:
-            - "if set, do not verify presented TLS certificate before communicating with Vault server : setting this variable is not recommended except during testing"
+            - "if set, do not verify presented TLS certificate before communicating with Vault server : setting this
+             variable is not recommended except during testing"
         default: to environment variable VAULT_SKIP_VERIFY
     authtype:
         description:
@@ -49,37 +59,47 @@ options:
         default: to environment variable VAULT_PASSWORD
     name:
         description:
-            - user name.
+            - name of authenticator
+    description:
+        description:
+            - description of authenticator
+    mount_point:
+        description:
+            - location where this auth backend will be mounted
 '''
 EXAMPLES = '''
 ---
 - hosts: localhost
   tasks:
-    - hashivault_userpass_delete:
-      name: 'bob'
+    - hashivault_auth_enable:
+        name: "userpass"
 '''
 
 
 def main():
     argspec = hashivault_argspec()
     argspec['name'] = dict(required=True, type='str')
+    argspec['description'] = dict(required=False, type='str')
+    argspec['mount_point'] = dict(required=False, type='str', default=None)
     module = hashivault_init(argspec)
-    result = hashivault_userpass_delete(module.params)
+    result = hashivault_auth_enable(module.params)
     if result.get('failed'):
         module.fail_json(**result)
     else:
         module.exit_json(**result)
 
 
-from ansible.module_utils.basic import *
-from ansible.module_utils.hashivault import *
-
-
 @hashiwrapper
-def hashivault_userpass_delete(params):
+def hashivault_auth_enable(params):
     client = hashivault_auth_client(params)
-    username = params.get('name')
-    client.delete_userpass(username)
+    name = params.get('name')
+    description = params.get('description')
+    mount_point = params.get('mount_point')
+    backends = client.sys.list_auth_methods()
+    path = (mount_point or name) + u"/"
+    if path in backends:
+        return {'changed': False}
+    client.sys.enable_auth_method(name, description=description, path=mount_point)
     return {'changed': True}
 
 

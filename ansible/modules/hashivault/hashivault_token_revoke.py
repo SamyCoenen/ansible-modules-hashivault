@@ -1,4 +1,10 @@
 #!/usr/bin/env python
+from ansible.module_utils.hashivault import hashivault_argspec
+from ansible.module_utils.hashivault import hashivault_auth_client
+from ansible.module_utils.hashivault import hashivault_init
+from ansible.module_utils.hashivault import hashiwrapper
+
+ANSIBLE_METADATA = {'status': ['stableinterface'], 'supported_by': 'community', 'version': '1.1'}
 DOCUMENTATION = '''
 ---
 module: hashivault_token_revoke
@@ -17,7 +23,8 @@ options:
         default: to environment variable VAULT_CACERT
     ca_path:
         description:
-            - "path to a directory of PEM-encoded CA cert files to verify the Vault server TLS certificate : if ca_cert is specified, its value will take precedence"
+            - "path to a directory of PEM-encoded CA cert files to verify the Vault server TLS certificate : if ca_cert
+             is specified, its value will take precedence"
         default: to environment variable VAULT_CAPATH
     client_cert:
         description:
@@ -29,7 +36,8 @@ options:
         default: to environment variable VAULT_CLIENT_KEY
     verify:
         description:
-            - "if set, do not verify presented TLS certificate before communicating with Vault server : setting this variable is not recommended except during testing"
+            - "if set, do not verify presented TLS certificate before communicating with Vault server : setting this
+             variable is not recommended except during testing"
         default: to environment variable VAULT_SKIP_VERIFY
     authtype:
         description:
@@ -68,6 +76,7 @@ EXAMPLES = '''
       register: "vault_token_revoke"
 '''
 
+
 def main():
     argspec = hashivault_argspec()
     argspec['revoke_token'] = dict(required=False, type='str')
@@ -80,9 +89,6 @@ def main():
     else:
         module.exit_json(**result)
 
-from ansible.module_utils.basic import *
-from ansible.module_utils.hashivault import *
-
 
 @hashiwrapper
 def hashivault_token_revoke(params):
@@ -94,6 +100,7 @@ def hashivault_token_revoke(params):
         revoke_token = params.get('token')
     revoke = client.revoke_token(token=revoke_token, orphan=orphan, accessor=accessor)
     return {'changed': True, 'revoke': revoke}
+
 
 if __name__ == '__main__':
     main()

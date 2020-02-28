@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+ANSIBLE_METADATA = {'status': ['stableinterface'], 'supported_by': 'community', 'version': '1.1'}
 DOCUMENTATION = '''
 ---
 author: Developed for AT&T by Nicholas Gibson, August 2017
@@ -6,7 +7,8 @@ module: hashivault_write_from_file
 version_added: "3.8.3"
 short_description: Hashicorp Vault write file module
 description:
-    - Writes a file encoded in base64 to Hashicorp Vault. Implementation in `/plugins/action/hashivault_write_from_file.py`.
+    - "Writes a file encoded in base64 to Hashicorp Vault. Implementation in
+     `/plugins/action/hashivault_write_from_file.py`."
 options:
     url:
         description:

@@ -1,11 +1,17 @@
 #!/usr/bin/env python
+from ansible.module_utils.hashivault import hashivault_argspec
+from ansible.module_utils.hashivault import hashivault_client
+from ansible.module_utils.hashivault import hashivault_init
+from ansible.module_utils.hashivault import hashiwrapper
+
+ANSIBLE_METADATA = {'status': ['stableinterface'], 'supported_by': 'community', 'version': '1.1'}
 DOCUMENTATION = '''
 ---
-module: hashivault_secret_disable
-version_added: "2.2.0"
-short_description: Hashicorp Vault secret disable module
+module: hashivault_leader
+version_added: "3.16.4"
+short_description: Hashicorp Vault leader module
 description:
-    - Module to disable secret backends in Hashicorp Vault.
+    - Module to get leader information of Hashicorp Vault.
 options:
     url:
         description:
@@ -17,7 +23,8 @@ options:
         default: to environment variable VAULT_CACERT
     ca_path:
         description:
-            - "path to a directory of PEM-encoded CA cert files to verify the Vault server TLS certificate : if ca_cert is specified, its value will take precedence"
+            - "path to a directory of PEM-encoded CA cert files to verify the Vault server TLS certificate : if ca_cert
+             is specified, its value will take precedence"
         default: to environment variable VAULT_CAPATH
     client_cert:
         description:
@@ -29,7 +36,8 @@ options:
         default: to environment variable VAULT_CLIENT_KEY
     verify:
         description:
-            - "if set, do not verify presented TLS certificate before communicating with Vault server : setting this variable is not recommended except during testing"
+            - "if set, do not verify presented TLS certificate before communicating with Vault server : setting this
+             variable is not recommended except during testing"
         default: to environment variable VAULT_SKIP_VERIFY
     authtype:
         description:
@@ -47,50 +55,31 @@ options:
         description:
             - password to login to vault.
         default: to environment variable VAULT_PASSWORD
-    name:
-        description:
-            - name of secret backend
-    backend:
-        description:
-            - type of secret backend
-    description:
-        description:
-            - description of secret backend
-    config:
-        description:
-            - config of secret backend
 '''
 EXAMPLES = '''
 ---
 - hosts: localhost
   tasks:
-    - hashivault_secret_disable:
-        name: "ephemeral"
-        backend: "generic"
+    - hashivault_leader:
+      register: 'vault_leader'
+    - debug: msg="Leader is {{vault_leader.status.leader_address}}"
 '''
 
 
 def main():
     argspec = hashivault_argspec()
-    argspec['name'] = dict(required=True, type='str')
     module = hashivault_init(argspec)
-    result = hashivault_secret_disable(module.params)
+    result = hashivault_leader(module.params)
     if result.get('failed'):
         module.fail_json(**result)
     else:
         module.exit_json(**result)
 
 
-from ansible.module_utils.basic import *
-from ansible.module_utils.hashivault import *
-
-
 @hashiwrapper
-def hashivault_secret_disable(params):
-    client = hashivault_auth_client(params)
-    name = params.get('name')
-    client.sys.disable_secrets_engine(name)
-    return {'changed': True}
+def hashivault_leader(params):
+    client = hashivault_client(params)
+    return {'status': client.sys.read_leader_status()}
 
 
 if __name__ == '__main__':

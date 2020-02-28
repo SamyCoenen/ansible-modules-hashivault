@@ -2,6 +2,206 @@ Changelog
 =========
 
 
+4.2.3 (2019-11-21)
+------------------
+- Provide logged alternate data for write to get returned data. [Terry
+  Howe]
+- Added new return var to auth mount. [DrMagPie]
+- Added var to defirentiate new and updated engines. [DrMagPie]
+- Enable OIDC auth and role in namespaces. [Lynn Dong]
+
+
+4.2.2 (2019-10-29)
+------------------
+- Fix auth method. [Drew Mullen]
+
+
+4.2.1 (2019-10-24)
+------------------
+- Add OIDC auth role and functional test. [Lynn Dong]
+- Check mode param for auth method, clarify error. [Drew Mullen]
+- Fix idemp for namespaces. [Drew Mullen]
+- Updates to fix check mode regarding namespaces. [Drew Mullen]
+- Pass check mode if no namespace. [Drew Mullen]
+
+
+4.2.0 (2019-10-22)
+------------------
+- Deprecate hashivault_policy_set_from_file. [Terry Howe]
+- Add OIDC auth method config module. [Lynn Dong]
+- Altered hashivault_list.py to use the hvac list_secrets method. [Jason
+  Neurohr]
+- Fix db idempotency check. [Drew Mullen]
+- Rename deprecated modules. [Terry Howe]
+- Update examples to avoid deprecated modules. [Drew Mullen]
+- Tune and disable should use secret_engine instead. [Drew Mullen]
+- Deprecate tuning module. [Drew Mullen]
+- Cast options[version] to string for idempotence check. [Drew Mullen]
+- Fix some cases where casting raise exception. [Damien Goldenberg]
+
+
+4.1.0 (2019-08-30)
+------------------
+- Version 4.1.0. [Terry Howe]
+- Provide module to manage namespaces (ent only) [Drew Mullen]
+
+  clean up comments
+- Approle can accept params in a file with role_file. [Drew Mullen]
+
+
+4.0.0 (2019-08-14)
+------------------
+- Deprecate create and delete approle modules. [Terry Howe]
+- Add check_mode support for approle. [Terry Howe]
+- Approle secret mount point support. [Terry Howe]
+- Add proper approle modules. [Terry Howe]
+- Added hashivault_ldap_group module. [Jason Neurohr]
+- Make aws role create idempotent. [Terry Howe]
+- Db engine config plugin can be used for all db plugins. [Damien
+  Goldenberg]
+- Added support for custom mount points. [DrMagPie]
+
+
+3.18.2 (2019-08-06)
+-------------------
+- Fix the compatibility of the db role module with python 2.7. [Damien
+  Goldenberg]
+
+
+3.18.1 (2019-07-24)
+-------------------
+- Set no_log for some values. [Terry Howe]
+- Fix some documentation typos. [Terry Howe]
+- Fix the doc and upload script. [Terry Howe]
+
+
+3.18.0 (2019-07-24)
+-------------------
+- Added hashivault_auth_ldap and hashivault_identity_group [Jason
+  Neurohr]
+- Updated hashivault_auth_list.py to return False for changed. [Jason
+  Neurohr]
+- Fix some pep warnings and docs issues. [Terry Howe]
+- Fix various idempotence checks. [Drew Mullen]
+- Secret eng mgmt. [Drew Mullen]
+
+
+3.17.7 (2019-05-31)
+-------------------
+- Deprecate hashivault_auth_enable. [Terry Howe]
+- Add new hashivault_auth_method module. [Drew Mullen]
+- Add new hashivault_azure_auth_role module. [Drew Mullen]
+- Add new hashivault_azure_auth_config module. [Drew Mullen]
+
+
+3.17.6 (2019-05-23)
+-------------------
+- Azure configuration support. [Drew Mullen]
+- Allow required_if, etc to be passed. [Drew Mullen]
+- Make twine happy. [Terry Howe]
+
+
+3.17.5 (2019-05-16)
+-------------------
+- Allow to create custom approle secret id. [Wojciech Podgorski]
+
+
+3.17.4 (2019-04-25)
+-------------------
+- Fix kv2 secret write. [Vincent Mazenod]
+
+
+3.17.3 (2019-04-11)
+-------------------
+- Add `mount_point` option to the lookup plugin. [Piotr Śliwka]
+
+
+3.17.2 (2019-04-11)
+-------------------
+- Add the support for the http method and return json in case of GET
+  method. [Damien Goldenberg]
+
+
+3.17.1 (2019-04-05)
+-------------------
+- Support metadata for v1 reads. [Terry Howe]
+- Convert to use twine. [Terry Howe]
+
+
+3.17.0 (2019-04-05)
+-------------------
+- Add read metadata. [Terry Howe]
+- Add functional tests. [Terry Howe]
+- Add a module to fetch cluster health information. [Damien Goldenberg]
+- Add a module to fetch leader information cluster. [Damien Goldenberg]
+- Enable secret keystore. [Terry Howe]
+- Add pep8 to tox.ini. [Terry Howe]
+- Pep8 compliance. [Terry Howe]
+- Start getting pep8 support. [Terry Howe]
+- Clean up some warnings that are causing issues. [Terry Howe]
+
+
+3.16.3 (2019-03-26)
+-------------------
+- Fix approle auth for hvac kv2 engine. [Nathan K]
+
+
+3.16.2 (2019-03-02)
+-------------------
+- Add arguments to init. [Terry Howe]
+
+
+3.16.1 (2019-02-27)
+-------------------
+- Add support for passing mount_point to hashivault_userpass. [Stanislav
+  Yotov]
+
+
+3.16.0 (2019-02-05)
+-------------------
+- Ansible galaxy support. [Maxime Brunet]
+
+
+3.15.1 (2019-02-05)
+-------------------
+- Have write return data. [Terry Howe]
+- Clean up imports. [Terry Howe]
+- Get rid of inventory warnings. [Terry Howe]
+- Add document metadata. [Terry Howe]
+
+
+3.15.0 (2019-01-31)
+-------------------
+- Add tests for hashivault_userpass. [Terry Howe]
+- Userpass user management module. [p0tr3c]
+
+
+3.14.0 (2019-01-31)
+-------------------
+- Add tests for root token generation. [Terry Howe]
+- Add support to generate root token & revoke tokens. [Bharath
+  Channakeshava]
+
+
+3.13.0 (2019-01-31)
+-------------------
+- kv2 secret read, write and delete with hvac kv2 client. [Terry Howe]
+- Remove verbose call of playbook. [drewmullen]
+- Initial kv2 support [rmullen]
+- Identity entity tests. [Terry Howe]
+- Fix entity update, will not overwrite with default on update. [p0tr3c]
+- Fix unordered list comparison for policies. [p0tr3c]
+- Add identity management module. [p0tr3c]
+- Support for entity aliases. [p0tr3c]
+- Make global env travis. [Terry Howe]
+
+
+3.12.1 (2019-01-24)
+-------------------
+- Add pipeline job to build Ansible webdocs and publish to Github pages,
+  Fix YAML. [Samy Coenen]
+
+
 3.12.0 (2019-01-06)
 -------------------
 - Optionally include namespace as play parameter or environment var.
